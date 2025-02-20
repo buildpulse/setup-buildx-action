@@ -1,11 +1,15 @@
 import * as crypto from 'crypto';
 import * as core from '@actions/core';
 
+import * as TOML from '@iarna/toml';
+
 import {Docker} from '@docker/actions-toolkit/lib/docker/docker';
 import {Util} from '@docker/actions-toolkit/lib/util';
 import {Toolkit} from '@docker/actions-toolkit/lib/toolkit';
 
 import {Node} from '@docker/actions-toolkit/lib/types/buildx/builder';
+import path from 'path';
+import * as fs from 'fs';
 
 export const builderNodeEnvPrefix = 'BUILDER_NODE';
 const defaultBuildkitdFlags = '--allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host';
@@ -68,15 +72,51 @@ export async function getCreateArgs(inputs: Inputs, toolkit: Toolkit): Promise<A
   if (inputs.use) {
     args.push('--use');
   }
+
+  // modify BuildKit config to include local registry
   if (inputs.buildkitdConfig) {
-    args.push('--config', toolkit.buildkit.config.resolveFromFile(inputs.buildkitdConfig));
-  } else if (inputs.buildkitdConfigInline) {
-    args.push('--config', toolkit.buildkit.config.resolveFromString(inputs.buildkitdConfigInline));
+    const newBuildkitConfigPath = await addClusterLocalRegistryConfigFile(inputs.buildkitdConfig);
+
+    args.push('--config', toolkit.buildkit.config.resolveFromFile(newBuildkitConfigPath));
+  } else {
+    const startingConfig = inputs.buildkitdConfigInline || '';
+    const newBuildKitToml = addClusterLocalRegistryConfig(startingConfig);
+
+    args.push('--config', toolkit.buildkit.config.resolveFromString(newBuildKitToml));
   }
+
   if (inputs.endpoint) {
     args.push(inputs.endpoint);
   }
   return args;
+}
+
+async function addClusterLocalRegistryConfigFile(buildkitConfigPath: string): Promise<string> {
+  const configDir = path.dirname(buildkitConfigPath);
+  const newBuildkitConfigPath = path.join(configDir, 'buildpulse_buildkit.toml');
+
+  const buildkitConfigContent = await fs.promises.readFile(buildkitConfigPath, 'utf-8');
+  const newBuildkitConfigContent = addClusterLocalRegistryConfig(buildkitConfigContent);
+  await fs.promises.writeFile(newBuildkitConfigPath, newBuildkitConfigContent);
+
+  return newBuildkitConfigPath;
+}
+
+function addClusterLocalRegistryConfig(buildkitConfig: string): string {
+  const inlineToml = TOML.parse(buildkitConfig);
+  if (!inlineToml['registry']) {
+    inlineToml['registry'] = {};
+  }
+
+  const buildpulseDockerRegistry = process.env.BP_DOCKER_REGISTRY;
+  if (buildpulseDockerRegistry && buildpulseDockerRegistry.length && !inlineToml['registry'][buildpulseDockerRegistry]) {
+    inlineToml['registry'][buildpulseDockerRegistry] = {
+      http: true,
+      insecure: true
+    };
+  }
+
+  return TOML.stringify(inlineToml);
 }
 
 export async function getAppendArgs(inputs: Inputs, node: Node, toolkit: Toolkit): Promise<Array<string>> {
