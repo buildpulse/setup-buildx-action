@@ -6,7 +6,7 @@
 
 ## About
 
-GitHub Action to set up Docker [Buildx](https://github.com/docker/buildx).
+[BuildPulse](https://buildpulse.io) GitHub Action to set up Docker [Buildx](https://github.com/docker/buildx).
 
 This action will create and boot a builder that can be used in the following
 steps of your workflow if you're using Buildx or the [`build-push` action](https://github.com/docker/build-push-action/).
@@ -50,7 +50,7 @@ jobs:
         uses: docker/setup-qemu-action@v3
       -
         name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: buildpulse/setup-buildx-action@v3
 ```
 
 ## Configuring your builder
