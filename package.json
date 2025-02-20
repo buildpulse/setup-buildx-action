@@ -27,6 +27,7 @@
   "dependencies": {
     "@actions/core": "^1.11.1",
     "@docker/actions-toolkit": "^0.56.0",
+    "@iarna/toml": "^2.2.5",
     "js-yaml": "^4.1.0"
   },
   "devDependencies": {

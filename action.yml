@@ -7,6 +7,12 @@ branding:
   color: 'blue'
 
 inputs:
+  buildpulse-builder:
+    description: "BuildPulse Runners remote docker builder runner-type"
+    required: false
+  name:
+    description: 'Override generated builder name'
+    required: false
   version:
     description: 'Buildx version. (eg. v0.3.0)'
     required: false

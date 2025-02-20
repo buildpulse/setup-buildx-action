@@ -6,7 +6,7 @@
 
 ## About
 
-GitHub Action to set up Docker [Buildx](https://github.com/docker/buildx).
+[BuildPulse](https://buildpulse.io) GitHub Action to set up Docker [Buildx](https://github.com/docker/buildx). See [BuildPulse Runners](#BuildPulse-Runners) below.
 
 This action will create and boot a builder that can be used in the following
 steps of your workflow if you're using Buildx or the [`build-push` action](https://github.com/docker/build-push-action/).
@@ -16,6 +16,12 @@ a [BuildKit](https://github.com/moby/buildkit) container.
 
 ![Screenshot](.github/setup-buildx-action.png)
 
+## BuildPulse Runners
+This action is modified to be used with [BuildPulse Runners](https://buildpulse.io/products/runners) - cut GitHub Actions cost in half, increase performance 2x.
+
+This action sets up a builder configured to use the in-cluster docker registry for docker build image layer caching. This is useful for re-using cached layers between builds to speed up build times.
+
+This action also enables [BuildPulse Runners] remote docker builders - powerful remote builders that decrease build times by 90%! See the [`buildpulse-builder`](#inputs) action input below.
 ___
 
 * [Usage](#usage)
@@ -50,7 +56,7 @@ jobs:
         uses: docker/setup-qemu-action@v3
       -
         name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: buildpulse/setup-buildx-action@v3
 ```
 
 ## Configuring your builder
@@ -87,6 +93,7 @@ The following inputs can be used as `step.with` keys:
 
 | Name                         | Type     | Default            | Description                                                                                                                                                                  |
 |------------------------------|----------|--------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `buildpulse-builder`                    | String   |                    | BuildPulse Runners remote docker builder runner type ID                                                  |
 | `version`                    | String   |                    | [Buildx](https://github.com/docker/buildx) version. (eg. `v0.3.0`, `latest`, `https://github.com/docker/buildx.git#master`)                                                  |
 | `driver`                     | String   | `docker-container` | Sets the [builder driver](https://docs.docker.com/engine/reference/commandline/buildx_create/#driver) to be used                                                             |
 | `driver-opts`                | List     |                    | List of additional [driver-specific options](https://docs.docker.com/engine/reference/commandline/buildx_create/#driver-opt) (eg. `image=moby/buildkit:master`)              |
@@ -96,6 +103,7 @@ The following inputs can be used as `step.with` keys:
 | `install`                    | Bool     | `false`            | Sets up `docker build` command as an alias to `docker buildx`                                                                                                                |
 | `use`                        | Bool     | `true`             | Switch to this builder instance                                                                                                                                              |
 | `endpoint`                   | String   |                    | [Optional address for docker socket](https://docs.docker.com/engine/reference/commandline/buildx_create/#description) or context from `docker context ls`                    |
+| `name`                   | String   |                    | Optional override for the [docker builder name](https://docs.docker.com/reference/cli/docker/buildx/create/#name)                    |
 | `platforms`                  | List/CSV |                    | Fixed [platforms](https://docs.docker.com/engine/reference/commandline/buildx_create/#platform) for current node. If not empty, values take priority over the detected ones. |
 | `append`                     | YAML     |                    | [Append additional nodes](https://docs.docker.com/build/ci/github-actions/configure-builder/#append-additional-nodes-to-the-builder) to the builder                          |
 | `cache-binary`               | Bool     | `true`             | Cache buildx binary to GitHub Actions cache backend                                                                                                                          |
