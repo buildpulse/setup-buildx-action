@@ -1,0 +1,30 @@
+name: Test Docker Builder
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-testing-image:
+    name: Test docker-builder with registry mirror
+    runs-on: bp-ubuntu-latest-x64-4x
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Buildx (docker-builder)
+        id: setup_x64_builder
+        uses: ./
+        with:
+          buildpulse-builder: bp-docker-builder-x64-32x
+
+      - name: Build
+        timeout-minutes: 20
+        uses: buildpulse/build-push-action@v6
+        with:
+          push: false
+          platforms: amd64
+          builder: ${{ steps.setup_x64_builder.outputs.name }}
+          context: .
+          file: test/Dockerfile
+          tags: test-docker-builder:latest
